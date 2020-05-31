@@ -434,80 +434,97 @@ Value *evalLetStar(Value *args, Frame *frame) {
   return eval(car(expr), frame);
 }
 
-// TODO
 Value *evalLetrec(Value *args, Frame *frame) {
   if (isNull(args)) {
-    printf("Invalid arguments for let: No args.\n");
+    printf("Evaluation error: Invalid arguments for letrec: No args.\n");
     texit(0);
   }
 	else if (isNull(cdr(args))) {
-		printf("Evaluation error: no args following the bindings in let.\n");
+		printf("Evaluation error: no args following the bindings in letrec.\n");
     texit(0);
 	}
-
-  Value *pairs = car(args);
-  Value *expr = cdr(args);
-	
-  if (pairs->type != CONS_TYPE && pairs->type != NULL_TYPE) {
-    printf("Evaluation error: bad form in let.\n");
+	else if (args->type != CONS_TYPE) {
+		printf("Evaluation error: invalid arguments in letrec.\n");
     texit(0);
-  }
-
-  Frame *newFrame = talloc(sizeof(Frame));
+	}
+	Frame *newFrame = talloc(sizeof(Frame));
 	newFrame->parent = frame;
-  Value *bindings = makeNull();
-  Value *temp = pairs;
-  while (!isNull(pairs) && pairs->type != NULL_TYPE) {
-    Value *pair = car(pairs);
-    if (isNull(pair)) {
-      printf("Evaluation error: null binding in let.\n");
-      texit(0);
-    }
-    else if (pair->type != CONS_TYPE) {
-      printf("Evaluation error: bad form in let\n");
-      texit(0);
-    }
-    else if (car(pair)->type != SYMBOL_TYPE) {
-      printf("Evaluation error: left side of a let pair doesn't have a variable.\n");
-      texit(0);
-    }
-    else if (isNull(cdr(pair))) {
-      printf("Evaluation error: Value associated with symbol is null.\n");
-      texit(0);
-    }
-    Value *symbol = car(pair);
-    if (checkBindings(symbol, bindings)) {
-      printf("Evaluation error: duplicate variable in let\n");
-      texit(0);
-    }
-    Value *value = makeNull();
+	newFrame->bindings = makeNull();
 
-		// value->type = UNSPECIFIED_TYPE;
-		// value->s = "#<unspecified>";
-    Value *newCell = cons(symbol, value);
-    bindings = cons(newCell, bindings);
-    pairs = cdr(pairs);
+	Value *unspecified = talloc(sizeof(Value));
+	unspecified->type = UNSPECIFIED_TYPE;
+
+	Value *pairs = car(args);
+	Value *symbols = talloc(sizeof(Value));
+
+	while (! ( ((pairs))->type == NULL_TYPE) ) {
+		if(pairs->type != CONS_TYPE) {
+			printf("Evaluation error: invalid arguments in letrec.\n");
+			texit(0);
+		}
+		if((car(pairs)-> type ==CONS_TYPE) && (length(car(pairs)) == 2)) {
+			if (car(car(pairs))->type != SYMBOL_TYPE) {
+				printf("Evaluation error: invalid arguments in letrec.\n");
+				texit(0);
+			}
+			else {
+				Value *symbolLoop;
+				symbolLoop = newFrame->bindings;
+				while(symbolLoop->type != NULL_TYPE) {
+					if (!strcmp((car(car(symbolLoop))->s),  (car(car(pairs))->s))) {
+							printf("Evaluation error: No more arguments in letrec.\n");
+							texit(0);
+					}
+					symbolLoop = cdr(symbolLoop);
+				}				
+				symbols = cons(car(car(pairs)), unspecified);
+				newFrame->bindings = cons(symbols, newFrame->bindings);
+			}
+			pairs = cdr(pairs);
+		} 
+		else {
+			printf("Evaluation error: No more arguments in letrec.\n");
+			texit(0);
+		}
 	}
 
-  Value *tempBindings = bindings;
+	Value *boundValue = talloc(sizeof(Value));
+	Value *functions = makeNull();
 
-  while (!isNull(temp) && temp->type != NULL_TYPE) {
-    Value *pair = car(temp);
-    Value *binding = car(tempBindings);
-    binding->c.cdr = eval(car(cdr(pair)), newFrame);
-    temp = cdr(temp);
-    tempBindings = cdr(tempBindings);
+	pairs = car(args);
+	while (! ( ((pairs))->type == NULL_TYPE) ) {
+		if(pairs->type != CONS_TYPE){
+			printf("Evaluation error: Invalid arguments in letrec.\n");
+			texit(0);
+		}
+		if((car(pairs)-> type ==CONS_TYPE) && (length(car(pairs)) == 2)){
+			boundValue = eval(car(cdr(car(pairs))), newFrame);
+			functions = cons(boundValue, functions);
+		} 
+		else { 
+			printf("Evaluation error: No more arguments in letrec.\n");
+			texit(0);
+		}
+		pairs = cdr(pairs);
 	}
-
-	newFrame->bindings = bindings;
-
-	while (cdr(expr)->type != NULL_TYPE) {
-		eval(car(expr), newFrame);
-		expr = cdr(expr);
+	Value *loop;
+	loop = newFrame->bindings;
+	while ( functions->type != NULL_TYPE) {
+		car(loop)->c.cdr = car(functions);
+		loop = cdr(loop);
+		functions = cdr(functions);
 	}
-  // Checking for repeats in bindings
 	
-  return eval(car(expr), newFrame);
+	args = cdr(args);
+	if (args->type == NULL_TYPE) {
+		printf("Evaluation error: Invalid arguments in letrec.\n");
+		texit(0);
+	}
+	while (cdr(args)->type != NULL_TYPE) {
+		eval(car(args),newFrame);
+		args = cdr(args);
+	}
+	return eval(car(args), newFrame);
 }
 
 Value *evalSet(Value *args, Frame *frame) {
