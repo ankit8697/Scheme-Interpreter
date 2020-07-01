@@ -1,6 +1,3 @@
-# Scheme-Interpreter
-Implementation of a Scheme Interpreter written in C
-
 # Scheme Interpreter in C
 
 ## Table of Contents
