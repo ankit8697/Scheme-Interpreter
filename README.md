@@ -15,7 +15,7 @@ The project itself is an interpreter for the language Scheme written in C. It ha
 
 ## Getting Started <a name = "getting_started"></a>
 
-To use this project, clone it into a local directory and run the make command. If you want to run tests, run the make test command. Then type in ./interpreter to open the interpreter environment. If you want to run a file, pipe the file into the executable using ./interpreter < path/to/scheme/file.
+To use this project, clone it into a local directory and run the make command. If you want to run tests, run the make test command. Then type in ```./interpreter``` to open the interpreter environment. If you want to run a file, pipe the file into the executable using ```./interpreter < path/to/scheme/file```.
 
 ### Prerequisites
 
